@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
 
-export interface IUser {
+export interface ICategory {
     _id: mongoose.Types.ObjectId;
-    firstName: string;
-    lastName: string;
-    username: string;
-    password: string;
+    name: string;
+    description: string;
+    image?: string;
     createdAt: Date;
     updatedAt: Date;
     __v: number;

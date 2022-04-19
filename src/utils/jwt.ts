@@ -9,7 +9,7 @@ const { OK, UNAUTHORIZED, FORBIDDEN } = StatusCodes;
 function generateAccessToken(user: Partial<IUser>) {
     try {
         const secret: string = get(process, 'env.TOKEN_SECRET', '');
-        const accessToken = sign(user, secret, { expiresIn: '120000' });
+        const accessToken = sign(user, secret, { expiresIn: '15min' });
         return accessToken;
     }
     catch (err) {
@@ -27,9 +27,9 @@ function tokenMiddleware(req: Request, res: Response, next: NextFunction) {
     const authHeader = get(req, 'headers.authorization', '');
     const token = get(authHeader.split(' '), '[1]', null);
     const secret: string = get(process, 'env.TOKEN_SECRET', '');
-    if (!token) return res.send(UNAUTHORIZED);
+    if (!token) return res.status(UNAUTHORIZED).json();
     verify(token, secret, (err: VerifyErrors | null, user: Object | undefined) => {
-        if (err) return res.send(FORBIDDEN);
+        if (err) return res.status(FORBIDDEN).json();
         set(req, 'body.jwtUser', user);
         next();
     });

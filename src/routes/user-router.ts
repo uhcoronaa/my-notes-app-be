@@ -2,7 +2,6 @@ import { NextFunction, Request, Response, Router } from "express";
 import StatusCodes from "http-status-codes";
 import get from "lodash/get";
 import omit from "lodash/omit";
-import { IUser } from "../models/user/user.interface";
 import { User } from "../models/user/user.model";
 import { ApiError } from "../errors/api-error";
 import { decrypt, encrypt } from "../utils/cipher";
@@ -24,7 +23,7 @@ userRouter.post('/signup', (req: Request, res: Response, next: NextFunction) => 
 
     User.findOne({ username }).then((userFound) => {
         if (!userFound) {
-            User.create(user).then((createdUser: IUser) => {
+            User.create(user).then(() => {
                 const secret: string = get(process, 'env.TOKEN_SECRET', '');
                 const accessToken = generateAccessToken(omit(user, ['password']));
                 const refreshToken = generateRefreshToken(omit(user, ['password']));
