@@ -1,9 +1,12 @@
 import './pre-start';
-import express, { Application, NextFunction, Request, Response } from 'express';
+import express, { Application } from 'express';
 import logger from 'jet-logger';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import { apiErrorHandler } from './errors/api-error-handler';
+import apiRouter from './routes/api';
+import mongoose from 'mongoose';
+import get from 'lodash/get';
 import cors from 'cors';
 
 const port: number = Number(process.env.PORT) || 3000;
@@ -20,11 +23,15 @@ if (process.env.NODE_ENV === 'prod') {
     app.use(helmet());
 }
 
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-    res.send('Hello World!');
-})
-
+app.use('/api', apiRouter);
 app.use(apiErrorHandler);
+
+const connect = mongoose.connect(get(process, 'env.MONGO_DB_URL', ''));
+connect.then((db) => {
+    logger.info('Connected correctly to DB');
+}, (err) => {
+    logger.err(err);
+});
 
 app.listen(port, () => {
     logger.info(serverStartMsg + port);
