@@ -79,7 +79,7 @@ categoryRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next
                 ...categoryFound,
                 ...valueUpdated
             };
-            Category.findOne({ name: newCategory.name, description: newCategory.description }).then((duplicatedCategory) => {
+            Category.findOne({ name: newCategory.name, description: newCategory.description, _id: { $ne: id } }).then((duplicatedCategory) => {
                 if (duplicatedCategory) {
                     next(ApiError.badRequest(['DUPLICATED_CATEGORY']));
                 }
