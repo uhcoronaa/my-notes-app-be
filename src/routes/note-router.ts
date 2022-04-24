@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import StatusCodes from "http-status-codes";
 import { ApiError } from "../errors/api-error";
+import { INote } from "../models/note/note.interface";
 import { Note } from "../models/note/note.model";
 import { tokenMiddleware } from "../utils/jwt";
 
@@ -62,6 +63,15 @@ noteRouter.delete('/:id', tokenMiddleware, (req: Request, res: Response, next: N
             });
         }
     });
+});
+
+noteRouter.patch('/patch-many', tokenMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    const notes: INote[] = req.body;
+
+    await Promise.all(notes.map((note) => {
+        return Note.updateOne({ _id: note._id }, note);
+    }));
+    res.status(OK).json();
 });
 
 noteRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
