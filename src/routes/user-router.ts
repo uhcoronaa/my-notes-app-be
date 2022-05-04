@@ -7,6 +7,7 @@ import { ApiError } from "../errors/api-error";
 import { decrypt, encrypt } from "../utils/cipher";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { verify, VerifyErrors } from "jsonwebtoken";
+import { IUser } from "../models/user/user.interface";
 
 const userRouter = Router();
 const { OK, UNAUTHORIZED, FORBIDDEN } = StatusCodes;
@@ -66,9 +67,10 @@ userRouter.post('/refresh-token', (req: Request, res: Response, next: NextFuncti
     const { refreshToken }: { refreshToken: string } = req.body;
     const secret: string = get(process, 'env.TOKEN_SECRET', '');
     if (!refreshToken) return res.sendStatus(UNAUTHORIZED);
-    verify(refreshToken, secret, (err: VerifyErrors | null, user: Object | undefined) => {
-        if (err) return res.status(FORBIDDEN);
-        const accessToken = generateAccessToken(user as { username: string });
+    verify(refreshToken, secret, (err: VerifyErrors | null, user: Object | undefined | Partial<IUser>) => {
+        if (err || !user) return res.status(FORBIDDEN);
+        const { firstName, lastName, username } = user as IUser;
+        const accessToken = generateAccessToken({ firstName, lastName, username });
         res.status(OK).send({ accessToken });
     });
 });

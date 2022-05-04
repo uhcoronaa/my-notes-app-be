@@ -29,7 +29,14 @@ function tokenMiddleware(req: Request, res: Response, next: NextFunction) {
     const secret: string = get(process, 'env.TOKEN_SECRET', '');
     if (!token) return res.status(UNAUTHORIZED).json();
     verify(token, secret, (err: VerifyErrors | null, user: Object | undefined) => {
-        if (err) return res.status(FORBIDDEN).json();
+        if (err) {
+            if (err.message === 'jwt expired') {
+                return res.status(FORBIDDEN).json({ message: 'JWT_EXPIRED' });
+            }
+            else {
+                return res.status(FORBIDDEN).json({ message: err.message });
+            }
+        }
         set(req, 'body.jwtUser', user);
         next();
     });
