@@ -13,6 +13,10 @@ const categorySchema: Schema = new mongoose.Schema<ICategory>({
     image: {
         type: String,
         required: false
+    },
+    user_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'user'
     }
 }, {
     timestamps: true

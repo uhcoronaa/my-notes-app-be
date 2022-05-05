@@ -8,4 +8,5 @@ export interface ICategory {
     createdAt: Date;
     updatedAt: Date;
     __v: number;
+    user_id: mongoose.Types.ObjectId;
 }

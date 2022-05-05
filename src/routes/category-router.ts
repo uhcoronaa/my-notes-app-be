@@ -13,9 +13,10 @@ categoryRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: Ne
     const category = {
         name,
         description,
-        image
+        image,
+        user_id: req.body.jwtUser._id
     };
-    Category.findOne({ name, description }).then((categoryFound) => {
+    Category.findOne({ name, description, user_id: req.body.jwtUser._id }).then((categoryFound) => {
         if (!categoryFound) {
             Category.create(category).then((createdCategory) => {
                 res.status(CREATED).json(createdCategory);
@@ -28,7 +29,7 @@ categoryRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: Ne
 });
 
 categoryRouter.get('/', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
-    Category.find({}).then((categories) => {
+    Category.find({ user_id: req.body.jwtUser._id }).then((categories) => {
         res.status(OK).json(categories);
     });
 });

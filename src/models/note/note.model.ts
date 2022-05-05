@@ -25,6 +25,10 @@ const noteSchema: Schema = new mongoose.Schema<INote>({
     order: {
         type: Number,
         required: true
+    },
+    user_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'user'
     }
 }, {
     timestamps: true

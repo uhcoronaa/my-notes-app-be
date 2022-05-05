@@ -11,7 +11,7 @@ const { OK, CREATED, BAD_REQUEST } = StatusCodes;
 
 noteRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
     const { name, description, image, category, status } = req.body;
-    Note.findOne({ name, description, category, status }).then((noteFound) => {
+    Note.findOne({ name, description, category, status, user_id: req.body.jwtUser._id }).then((noteFound) => {
         if (!noteFound) {
             Note.findOne({ status }).sort({ order: -1 }).then((noteFound) => {
                 const newNote = {
@@ -20,7 +20,8 @@ noteRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: NextFu
                     image,
                     category,
                     status,
-                    order: !noteFound ? 1 : noteFound.order + 1
+                    order: !noteFound ? 1 : noteFound.order + 1,
+                    user_id: req.body.jwtUser._id
                 };
                 Note.create(newNote).then((createdNote) => {
                     res.status(CREATED).json(createdNote);
@@ -34,7 +35,7 @@ noteRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: NextFu
 });
 
 noteRouter.get('/', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
-    Note.find({}).then((notes) => {
+    Note.find({ user_id: req.body.jwtUser._id}).then((notes) => {
         res.status(OK).json(notes);
     });
 });
