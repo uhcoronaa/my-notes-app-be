@@ -26,8 +26,8 @@ userRouter.post('/signup', (req: Request, res: Response, next: NextFunction) => 
         if (!userFound) {
             User.create(user).then((userCreated) => {
                 const secret: string = get(process, 'env.TOKEN_SECRET', '');
-                const accessToken = generateAccessToken({...omit(user, ['password']), _id: userCreated._id});
-                const refreshToken = generateAccessToken({...omit(user, ['password']), _id: userCreated._id});
+                const accessToken = generateAccessToken({ ...omit(user, ['password']), _id: userCreated._id });
+                const refreshToken = generateRefreshToken({ ...omit(user, ['password']), _id: userCreated._id });
                 res.status(OK).json({ accessToken, refreshToken, user: omit(user, ['password']) });
             }, (err: Error) => {
                 next(ApiError.internalError(['INTERNAL_SERVER_ERROR']));
@@ -68,7 +68,7 @@ userRouter.post('/refresh-token', (req: Request, res: Response, next: NextFuncti
     const secret: string = get(process, 'env.TOKEN_SECRET', '');
     if (!refreshToken) return res.sendStatus(UNAUTHORIZED);
     verify(refreshToken, secret, (err: VerifyErrors | null, user: Object | undefined | Partial<IUser>) => {
-        if (err || !user) return res.status(FORBIDDEN);
+        if (err || !user) return res.status(FORBIDDEN).send();
         const { firstName, lastName, username, _id } = user as IUser;
         const accessToken = generateAccessToken({ firstName, lastName, username, _id });
         res.status(OK).send({ accessToken });
