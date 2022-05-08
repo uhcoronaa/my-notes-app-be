@@ -9,4 +9,5 @@ export interface IUser {
     createdAt: Date;
     updatedAt: Date;
     __v: number;
+    image?: string;
 }
