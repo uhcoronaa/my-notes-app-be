@@ -49,7 +49,7 @@ userRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
     const decryptedUiPassword = decrypt2(password);
     User.findOne({ username }).then((userFound) => {
         if (!userFound) {
-            res.status(UNAUTHORIZED).json({ message: 'Invalid credentials' });
+            res.status(UNAUTHORIZED).json({ messages: ['USER_NOT_FOUND'] });
             return;
         }
         const { firstName, lastName, username, _id, image } = userFound;
@@ -61,7 +61,7 @@ userRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
             res.status(OK).json({ accessToken, refreshToken, user });
         }
         else {
-            res.status(UNAUTHORIZED).json({ message: 'Invalid password' });
+            res.status(UNAUTHORIZED).json({ messages: ['INVALID_PASSWORD'] });
         }
     });
 });
