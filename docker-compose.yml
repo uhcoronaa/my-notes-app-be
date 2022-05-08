@@ -6,20 +6,18 @@ services:
     image: mongo
     restart: always
     command: --auth
-    ports: 
-      - 27017:27017
     env_file:
       - ./db/config.env
     volumes:
       - ./db/db:/data/db
       - ./db/init_db:/docker-entrypoint-initdb.d
-  # my-notes-app-be:
-  #   container_name: my-notes-app-be
-  #   build: .
-  #   image: my-notes-app-be
-  #   ports: 
-  #     - 8081:8081
-  #   depends_on:
-  #     - db
-  #   links:
-  #     - db
+  my-notes-app-be:
+    container_name: my-notes-app-be
+    build: .
+    image: my-notes-app-be
+    ports: 
+      - 8081:8081
+    depends_on:
+      - db
+    links:
+      - db
