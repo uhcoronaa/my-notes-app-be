@@ -29,9 +29,9 @@ userRouter.post('/signup', (req: Request, res: Response, next: NextFunction) => 
     User.findOne({ username }).then((userFound) => {
         if (!userFound) {
             User.create(user).then((userCreated) => {
-                const accessToken = generateAccessToken({ ...omit(user, ['password']), _id: userCreated._id });
-                const refreshToken = generateRefreshToken({ ...omit(user, ['password']), _id: userCreated._id });
-                res.status(OK).json({ accessToken, refreshToken, user: { ...omit(user, ['password']), _id: userCreated._id } });
+                const accessToken = generateAccessToken({ ...omit(user, ['password', 'image']), _id: userCreated._id });
+                const refreshToken = generateRefreshToken({ ...omit(user, ['password', 'image']), _id: userCreated._id });
+                res.status(OK).json({ accessToken, refreshToken, user: { ...omit(user, ['password, image']), _id: userCreated._id } });
             }, (err: Error) => {
                 next(ApiError.internalError(['INTERNAL_SERVER_ERROR']));
             });
@@ -53,7 +53,7 @@ userRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
             return;
         }
         const { firstName, lastName, username, _id, image } = userFound;
-        const user = { firstName, lastName, username, _id, image };
+        const user = { firstName, lastName, username, _id };
         const decryptedPassword = decrypt(get(userFound, 'password', ''));
         if (decryptedPassword === decryptedUiPassword) {
             const accessToken = generateAccessToken(omit(user, ['image']));
@@ -96,8 +96,8 @@ userRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next: Ne
         }
         else {
             User.updateOne(condition, valueUpdated, {}, (err, user) => {
-                const { firstName, lastName, username, image } = valueUpdated;
-                const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id), image };
+                const { firstName, lastName, username } = valueUpdated;
+                const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id) };
                 const accessToken = generateAccessToken(omit(userToken, ['image']));
                 const refreshToken = generateRefreshToken(omit(userToken, ['image']));
                 res.status(OK).json({ accessToken, refreshToken, user: userToken });
@@ -124,13 +124,28 @@ userRouter.patch('/change-password/:id', tokenMiddleware, (req: Request, res: Re
         else {
             User.findOne({ _id: id }).then((userFound: any) => {
                 User.updateOne(condition, valueUpdated, {}, (err, user) => {
-                    const { firstName, lastName, username, image } = userFound;
-                    const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id), image };
+                    const { firstName, lastName, username } = userFound;
+                    const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id) };
                     const accessToken = generateAccessToken(omit(userToken, ['image']));
                     const refreshToken = generateRefreshToken(omit(userToken, ['image']));
                     res.status(OK).json({ accessToken, refreshToken, user: userToken });
                 });
             });
+        }
+    });
+});
+
+userRouter.get('/image/:id', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const condition = {
+        _id: id
+    }
+    User.findOne(condition).then((userFound) => {
+        if (!userFound) {
+            next(ApiError.badRequest(['NON_EXISTENT_USER']));
+        }
+        else {
+            res.status(OK).json({ image: userFound.image });
         }
     });
 });

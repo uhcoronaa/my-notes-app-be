@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import StatusCodes from "http-status-codes";
 import { ApiError } from "../errors/api-error";
 import { Category } from "../models/category/category.model";
+import { Note } from "../models/note/note.model";
 import { tokenMiddleware } from "../utils/jwt";
 
 
@@ -16,7 +17,7 @@ categoryRouter.post('/', tokenMiddleware, (req: Request, res: Response, next: Ne
         image,
         user_id: req.body.jwtUser._id
     };
-    Category.findOne({ name, description, user_id: req.body.jwtUser._id }).then((categoryFound) => {
+    Category.findOne({ name, user_id: req.body.jwtUser._id }).then((categoryFound) => {
         if (!categoryFound) {
             Category.create(category).then((createdCategory) => {
                 res.status(CREATED).json(createdCategory);
@@ -53,9 +54,16 @@ categoryRouter.delete('/:id', tokenMiddleware, (req: Request, res: Response, nex
             next(ApiError.badRequest(['NON_EXISTENT_CATEGORY']));
         }
         else {
-            Category.deleteOne({ _id: id }).then(() => {
-                res.status(OK).json();
-            });
+            Note.findOne({category: categoryFound.name}).then((noteFound)=>{
+                if(!noteFound){
+                    Category.deleteOne({ _id: id }).then(() => {
+                        res.status(OK).json();
+                    });
+                }
+                else {
+                    next(ApiError.badRequest(['NOTES_WITH_CATEGORY']));
+                }
+            })
         }
     });
 });
@@ -80,7 +88,7 @@ categoryRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next
                 ...categoryFound,
                 ...valueUpdated
             };
-            Category.findOne({ name: newCategory.name, description: newCategory.description, _id: { $ne: id } }).then((duplicatedCategory) => {
+            Category.findOne({ name: newCategory.name, _id: { $ne: id } }).then((duplicatedCategory) => {
                 if (duplicatedCategory) {
                     next(ApiError.badRequest(['DUPLICATED_CATEGORY']));
                 }
