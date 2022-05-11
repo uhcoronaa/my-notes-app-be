@@ -95,12 +95,19 @@ userRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next: Ne
             next(ApiError.badRequest(['NON_EXISTENT_USER']));
         }
         else {
-            User.updateOne(condition, valueUpdated, {}, (err, user) => {
-                const { firstName, lastName, username } = valueUpdated;
-                const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id) };
-                const accessToken = generateAccessToken(omit(userToken, ['image']));
-                const refreshToken = generateRefreshToken(omit(userToken, ['image']));
-                res.status(OK).json({ accessToken, refreshToken, user: userToken });
+            User.findOne({ username: username, _id: { $ne: id } }).then((duplicatedUser) => {
+                if (duplicatedUser) {
+                    next(ApiError.badRequest(['DUPLICATED_USERNAME']));
+                }
+                else {
+                    User.updateOne(condition, valueUpdated, {}, (err, user) => {
+                        const { firstName, lastName, username } = valueUpdated;
+                        const userToken = { firstName, lastName, username, _id: new mongoose.Types.ObjectId(id) };
+                        const accessToken = generateAccessToken(omit(userToken, ['image']));
+                        const refreshToken = generateRefreshToken(omit(userToken, ['image']));
+                        res.status(OK).json({ accessToken, refreshToken, user: userToken });
+                    });
+                }
             });
         }
     });
