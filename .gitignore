@@ -1,3 +1,4 @@
 dist
 src/pre-start
 node_modules
+db
