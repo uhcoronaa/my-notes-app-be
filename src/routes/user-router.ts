@@ -4,7 +4,7 @@ import get from "lodash/get";
 import omit from "lodash/omit";
 import { User } from "../models/user/user.model";
 import { ApiError } from "../errors/api-error";
-import { decrypt, decrypt2, encrypt } from "../utils/cipher";
+import { encrypt, compare } from "../utils/cipher";
 import { generateAccessToken, generateRefreshToken, tokenMiddleware } from "../utils/jwt";
 import { verify, VerifyErrors } from "jsonwebtoken";
 import { IUser } from "../models/user/user.interface";
@@ -15,9 +15,7 @@ const { OK, UNAUTHORIZED, FORBIDDEN } = StatusCodes;
 
 userRouter.post('/signup', (req: Request, res: Response, next: NextFunction) => {
     const { firstName, lastName, username, password, image } = req.body;
-    const decryptedUiPassword = decrypt2(password);
-
-    const encryptedPassword = encrypt(decryptedUiPassword);
+    const encryptedPassword = encrypt(password);
     const user = {
         firstName,
         lastName,
@@ -46,7 +44,6 @@ userRouter.post('/signup', (req: Request, res: Response, next: NextFunction) => 
 
 userRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
     const { username, password }: { username: string, password: string } = req.body;
-    const decryptedUiPassword = decrypt2(password);
     User.findOne({ username }).then((userFound) => {
         if (!userFound) {
             res.status(UNAUTHORIZED).json({ messages: ['USER_NOT_FOUND'] });
@@ -54,8 +51,7 @@ userRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
         }
         const { firstName, lastName, username, _id, image } = userFound;
         const user = { firstName, lastName, username, _id };
-        const decryptedPassword = decrypt(get(userFound, 'password', ''));
-        if (decryptedPassword === decryptedUiPassword) {
+        if (compare(password, get(userFound, 'password', ''))) {
             const accessToken = generateAccessToken(omit(user, ['image']));
             const refreshToken = generateRefreshToken(omit(user, ['image']));
             res.status(OK).json({ accessToken, refreshToken, user });
@@ -116,8 +112,7 @@ userRouter.patch('/:id', tokenMiddleware, (req: Request, res: Response, next: Ne
 userRouter.patch('/change-password/:id', tokenMiddleware, (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const { password } = req.body;
-    const decryptedUIPassword = decrypt2(password);
-    const encryptedPassword = encrypt(decryptedUIPassword);
+    const encryptedPassword = encrypt(password);
     const valueUpdated = {
         password: encryptedPassword
     };
